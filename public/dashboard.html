@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Gerencial - Monitoramento AUDESP</title>
+    <style>
+        :root {
+            --primary-color: #004a99;
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #6c757d;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --success: #28a745;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            margin-top: 5px;
+            font-size: 1.1rem;
+        }
+
+        /* --- Barra de Filtros --- */
+        .filter-container {
+            max-width: 1200px;
+            margin: 0 auto 30px auto;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+
+        .filter-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: #fff;
+        }
+
+        /* --- Grid de Cards --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid var(--primary-color);
+            transition: transform 0.2s ease;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .badge-tempo {
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            background-color: #343a40;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .card h3 {
+            margin-top: 10px;
+            font-size: 1.1rem;
+            line-height: 1.4;
+            color: var(--primary-color);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .card-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .card-info span {
+            font-weight: 600;
+        }
+
+        .progress-wrapper {
+            margin-top: 20px;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .progress-container {
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: 20px;
+            height: 22px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 20px;
+            transition: width 1.5s ease-in-out, background-color 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: bold;
+            background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent);
+            background-size: 1rem 1rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 50px;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            background: #fff;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Painel Gerencial de Metas</h1>
+        <p>Acompanhamento físico e financeiro da Execução Orçamentária</p>
+    </div>
+
+    <!-- Filtros de Pesquisa -->
+    <div class="filter-container">
+        <div class="filter-group">
+            <label for="filtroSecretaria">Unidade Orçamentária (Secretaria):</label>
+            <select id="filtroSecretaria" class="filter-control">
+                <option value="TODAS">Mostrar Todas</option>
+                <!-- Preenchido via JS -->
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="filtroAno">Ano Vigente:</label>
+            <select id="filtroAno" class="filter-control">
+                <option value="TODOS">Todos os Anos</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="filtroQuad">Quadrimestre:</label>
+            <select id="filtroQuad" class="filter-control">
+                <option value="TODOS">Todos</option>
+                <option value="1">1º Quadrimestre</option>
+                <option value="2">2º Quadrimestre</option>
+                <option value="3">3º Quadrimestre</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="dashboard-container" class="dashboard-grid">
+        <div class="empty-state">Conectando ao banco de dados...</div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const container = document.getElementById('dashboard-container');
+            const selectSecretaria = document.getElementById('filtroSecretaria');
+            const selectAno = document.getElementById('filtroAno');
+            const selectQuad = document.getElementById('filtroQuad');
+            
+            let dadosOriginais = []; // Guarda tudo que veio do banco
+
+            // Dicionário para traduzir o código para o nome da Secretaria
+            const secretariasNomes = {
+                "0201": "0201 - GABINETE",
+                "0202": "0202 - HABITAÇÃO",
+                "0204": "0204 - EDUCAÇÃO",
+                "0206": "0206 - SAÚDE",
+                "0207": "0207 - ESPORTES",
+                "0208": "0208 - SEGURANÇA",
+                "0209": "0209 - ASSISTÊNCIA SOCIAL",
+                "0210": "0210 - FUNDO ASSIST. SOCIAL",
+                "0211": "0211 - CULTURA",
+                "0212": "0212 - INFRAESTRUTURA",
+                "0221": "0221 - ENCARGOS GERAIS",
+                "0232": "0232 - PROCURADORIA",
+                "0234": "0234 - DESENV. ECONÔMICO",
+                "0235": "0235 - ZELADORIA",
+                "0236": "0236 - GOVERNO",
+                "0237": "0237 - ADMINISTRAÇÃO",
+                "0238": "0238 - FAZENDA",
+                "0239": "0239 - COMUNICAÇÃO",
+                "0240": "0240 - TURISMO",
+                "0241": "0241 - MEIO AMBIENTE",
+                "0242": "0242 - AGRICULTURA"
+            };
+
+            // Preenche o Select de Secretarias
+            for (const [cod, nome] of Object.entries(secretariasNomes)) {
+                let opt = document.createElement('option');
+                opt.value = cod;
+                opt.textContent = nome;
+                selectSecretaria.appendChild(opt);
+            }
+
+            // Busca os dados da API (URL ATUALIZADA PARA PRODUÇÃO)
+            fetch('https://indicadoresaudesp.onrender.com/api/dashboard')
+                .then(response => response.json())
+                .then(dados => {
+                    dadosOriginais = dados || [];
+                    renderizarCards(dadosOriginais);
+                })
+                .catch(error => {
+                    container.innerHTML = `<div class="empty-state" style="color: red;">❌ Erro ao conectar.</div>`;
+                });
+
+            // Função para aplicar os filtros e redesenhar a tela
+            function aplicarFiltros() {
+                const valSec = selectSecretaria.value;
+                const valAno = selectAno.value;
+                const valQuad = selectQuad.value;
+
+                const dadosFiltrados = dadosOriginais.filter(item => {
+                    // O prefixo da secretaria são os 4 primeiros dígitos da executora
+                    const prefixoExecutora = item.cod_executora.substring(0, 4);
+                    
+                    const passaSec = (valSec === "TODAS") || (prefixoExecutora === valSec);
+                    const passaAno = (valAno === "TODOS") || (item.ano_vigente.toString() === valAno);
+                    const passaQuad = (valQuad === "TODOS") || (item.quadrimestre.toString() === valQuad);
+
+                    return passaSec && passaAno && passaQuad;
+                });
+
+                renderizarCards(dadosFiltrados);
+            }
+
+            // Escutadores de eventos para recalcular ao alterar qualquer filtro
+            selectSecretaria.addEventListener('change', aplicarFiltros);
+            selectAno.addEventListener('change', aplicarFiltros);
+            selectQuad.addEventListener('change', aplicarFiltros);
+
+            // Motor de renderização
+            function renderizarCards(dadosParaRenderizar) {
+                container.innerHTML = '';
+
+                if (dadosParaRenderizar.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Nenhum indicador encontrado para este filtro.</div>';
+                    return;
+                }
+
+                dadosParaRenderizar.forEach(item => {
+                    // Cálculo Seguro
+                    let porcentagem = 0;
+                    if (item.meta_prevista > 0) {
+                        porcentagem = (item.meta_realizada / item.meta_prevista) * 100;
+                    }
+
+                    let porcentagemVisual = porcentagem > 100 ? 100 : porcentagem;
+
+                    let corBarra = 'var(--danger)'; 
+                    if (porcentagem >= 100) corBarra = 'var(--success)';
+                    else if (porcentagem >= 50) corBarra = 'var(--warning)';
+
+                    let textoDentroDaBarra = porcentagemVisual > 10 ? `${porcentagem.toFixed(1)}%` : '';
+
+                    // Traduz o prefixo para o nome da secretaria para o usuário ler fácil
+                    const prefixo = item.cod_executora.substring(0, 4);
+                    const nomeSecretaria = secretariasNomes[prefixo] || `Unidade ${prefixo}`;
+
+                    const cardHTML = `
+                        <div class="card">
+                            <div class="badge-tempo">${item.quadrimestre}º Quad / ${item.ano_vigente}</div>
+                            <h3>${item.acao}</h3>
+                            <div class="card-info" style="color: var(--primary-color); border-bottom: 1px dashed #eee; padding-bottom: 5px; margin-bottom: 10px;">
+                                <span>${nomeSecretaria}</span>
+                            </div>
+                            <div class="card-info">
+                                Executora: <span>${item.cod_executora}</span>
+                            </div>
+                            <div class="card-info">
+                                Local: <span style="text-align: right;">${item.local_execucao}</span>
+                            </div>
+                            
+                            <div class="progress-wrapper">
+                                <div class="progress-labels">
+                                    <span>Progresso da Meta</span>
+                                    <span>${item.meta_realizada} de ${item.meta_prevista}</span>
+                                </div>
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: 0%; background-color: ${corBarra}; color: ${porcentagem >= 50 && porcentagem < 100 ? '#000' : '#fff'};" data-target="${porcentagemVisual}">
+                                        ${textoDentroDaBarra}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += cardHTML;
+                });
+
+                // Animação das barras
+                setTimeout(() => {
+                    const barras = document.querySelectorAll('.progress-bar');
+                    barras.forEach(barra => {
+                        barra.style.width = barra.getAttribute('data-target') + '%';
+                    });
+                }, 50);
+            }
+        });
+    </script>
+</body>
+</html>

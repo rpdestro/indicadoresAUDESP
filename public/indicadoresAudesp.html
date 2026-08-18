@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo de Cadastro - Relatório de Monitoramento AUDESP</title>
+    <style>
+        :root {
+            --primary-color: #004a99;
+            --secondary-color: #f4f6f9;
+            --border-color: #ced4da;
+            --error-color: #dc3545;
+            --success-color: #28a745;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e9ecef;
+            color: #333;
+            margin: 0;
+            padding: 30px 15px;
+            display: flex;
+            justify-content: center;
+        }
+        .form-container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            max-width: 800px;
+            width: 100%;
+        }
+        .form-header {
+            background-color: #a8c6fa;
+            color: #000;
+            text-align: center;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.95rem;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background-color: #fff;
+        }
+        .form-control:disabled {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+            color: #6c757d;
+        }
+        .meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .meta-table th {
+            background-color: #a8c6fa;
+            border: 1px solid #000;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+        .meta-table td {
+            border: 1px solid #000;
+            padding: 0;
+        }
+        .meta-table input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            text-align: center;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .meta-table input:focus {
+            outline: 2px solid var(--primary-color);
+        }
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .error-msg {
+            color: var(--error-color);
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+            font-weight: bold;
+        }
+        .input-error {
+            border: 2px solid var(--error-color) !important;
+            background-color: #fff8f8;
+        }
+        .required-asterisk {
+            color: var(--error-color);
+        }
+        .btn-submit {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+        }
+        .btn-submit:hover {
+            background-color: #003366;
+        }
+        .btn-submit:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <div class="form-header">
+        Relatório de Monitoramento
+    </div>
+
+    <form id="monitoramentoForm" novalidate>
+        
+        <div class="form-group">
+            <label>Unidade Orçamentária <span class="required-asterisk">*</span>:</label>
+            <select class="form-control" id="und_orcamentaria" name="und_orcamentaria" required>
+                <option value="">Selecione a Secretaria...</option>
+                <option value="0201">0201 - GABINETE</option>
+                <option value="0202">0202 - HABITAÇÃO</option>
+                <option value="0204">0204 - EDUCAÇÃO</option>
+                <option value="0206">0206 - SAÚDE</option>
+                <option value="0207">0207 - ESPORTES</option>
+                <option value="0208">0208 - SEGURANÇA</option>
+                <option value="0209">0209 - ASSISTÊNCIA SOCIAL</option>
+                <option value="0210">0210 - FUNDO ASSISTÊNCIA SOCIAL</option>
+                <option value="0211">0211 - CULTURA</option>
+                <option value="0212">0212 - INFRAESTRUTURA</option>
+                <option value="0221">0221 - ENCARGOS GERAIS DO MUNICÍPIO</option>
+                <option value="0232">0232 - PROCURADORIA</option>
+                <option value="0234">0234 - DESENVOLVIMENTO ECONÔMICO</option>
+                <option value="0235">0235 - ZELADORIA</option>
+                <option value="0236">0236 - GOVERNO</option>
+                <option value="0237">0237 - ADMINISTRAÇÃO</option>
+                <option value="0238">0238 - FAZENDA</option>
+                <option value="0239">0239 - COMUNICAÇÃO</option>
+                <option value="0240">0240 - TURISMO</option>
+                <option value="0241">0241 - MEIO AMBIENTE</option>
+                <option value="0242">0242 - AGRICULTURA</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Unidade Executora <span class="required-asterisk">*</span>:</label>
+            <select class="form-control" id="und_executora" name="und_executora" required disabled>
+                <option value="">Selecione primeiro a Unidade Orçamentária...</option>
+            </select>
+        </div>
+
+        <!-- MÓDULO AUTO-PREENCHIDO PELA LOA -->
+        <div class="form-group">
+            <label>Ação <span class="required-asterisk">*</span>:</label>
+            <select class="form-control" id="acao" name="acao" required disabled>
+                <option value="">Aguardando Unidade Executora...</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Programa:</label>
+            <input type="text" class="form-control" id="programa" name="programa" readonly style="background-color: #e9ecef;">
+        </div>
+        
+        <div class="form-group">
+            <label>Unidade de medida:</label>
+            <input type="text" class="form-control" id="und_medida" name="und_medida" readonly style="background-color: #e9ecef;">
+        </div>
+        <!-- FIM MÓDULO AUTO-PREENCHIDO -->
+
+        <table class="meta-table">
+            <thead>
+                <tr>
+                    <th>Meta física prevista para <span id="anoVigente">2026</span></th>
+                    <th>Meta realizada – 1º quadrimestre <span id="anoVigenteQuad">2026</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="number" id="metaPrevista" name="meta_prevista" required min="0" step="0.01"></td>
+                    <td><input type="number" id="metaRealizada" name="meta_realizada" required min="0" step="0.01"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="form-group">
+            <label>Qual local foi executada a ação <span class="required-asterisk">*</span>:</label>
+            <input type="text" class="form-control" id="localExecucao" name="local_execucao" required>
+            <div class="error-msg" id="errorLocal">Por favor, informe o local de execução.</div>
+        </div>
+
+        <div class="form-group">
+            <label>Período de Execução da Ação <span class="required-asterisk">*</span>:</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="date" class="form-control" id="dataInicio" name="data_inicio" required>
+                <span style="align-self: center;">até</span>
+                <input type="date" class="form-control" id="dataFim" name="data_fim" required>
+            </div>
+            <div class="error-msg" id="errorData">As datas devem estar dentro do 1º quadrimestre (Jan a Abr).</div>
+        </div>
+
+        <div class="form-group">
+            <label id="labelJustificativa">Justificar a não execução ou o sub/superdimensionamento da ação:</label>
+            <textarea class="form-control" id="justificativa" name="justificativa"></textarea>
+            <div class="error-msg" id="errorJustificativa">A justificativa é OBRIGATÓRIA pois a meta realizada difere da prevista.</div>
+        </div>
+
+        <div class="form-group">
+            <label>Inserir fotos da fiscalização/monitoramento (Apenas JPG/PNG, máx 5MB):</label>
+            <input type="file" class="form-control" id="fotos" name="fotos" accept=".jpg, .jpeg, .png" multiple>
+            <div class="error-msg" id="errorFotos">Arquivo inválido ou excede o limite de 5MB.</div>
+        </div>
+
+        <button type="submit" class="btn-submit">Salvar Indicadores</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // --- PASSO 1: NOVO CÓDIGO - PRÉ-PREENCHIMENTO VIA URL ---
+        function carregarDadosDaURL() {
+            // Captura os parâmetros passados no link de acesso
+            const parametros = new URLSearchParams(window.location.search);
+            const urlOrcamentaria = parametros.get('orcamentaria'); 
+            const urlExecutora = parametros.get('executora');       
+            const urlAcaoTexto = parametros.get('acao'); // Espera um trecho do texto da ação
+            const urlMeta = parametros.get('meta');                 
+
+            // Se a URL contiver a unidade orçamentária, iniciamos o preenchimento
+            if (urlOrcamentaria) {
+                const selectOrc = document.getElementById('und_orcamentaria');
+                selectOrc.value = urlOrcamentaria;
+                selectOrc.dispatchEvent(new Event('change')); // Simula o clique do usuário
+                
+                // Aguarda o JavaScript montar o próximo campo (Executora)
+                setTimeout(() => {
+                    if (urlExecutora) {
+                        const selectExec = document.getElementById('und_executora');
+                        selectExec.value = urlExecutora;
+                        selectExec.dispatchEvent(new Event('change')); // Dispara a busca no Golang
+                    }
+                }, 300);
+
+                // Preenche a Meta Prevista e bloqueia o campo
+                if (urlMeta) {
+                    const inputMeta = document.getElementById('metaPrevista');
+                    inputMeta.value = urlMeta;
+                    inputMeta.readOnly = true; 
+                    inputMeta.style.backgroundColor = "#e9ecef"; // Deixa com aspecto de bloqueado
+                }
+            }
+        }
+        // --- FIM DO PASSO 1 ---
+        
+        // --- LÓGICA DAS UNIDADES ORÇAMENTÁRIAS E EXECUTORAS ---
+        const estruturaOrcamentaria = {
+            "0201": ["020101", "020102", "020103", "020104", "020105", "020108", "020109", "020110", "020111", "020112", "020113", "020114", "020115"],
+            "0202": ["020201", "020202", "020203", "020205", "020206"],
+            "0204": ["020401", "020402", "020403", "020404"],
+            "0206": ["020601", "020602", "020603", "020604", "020605"],
+            "0207": ["020701", "020702", "020703"],
+            "0208": ["020801", "020802", "020806"],
+            "0209": ["020901", "020902"],
+            "0210": ["021001", "021002", "021003"],
+            "0211": ["021101", "021102", "021103", "021104"],
+            "0212": ["021201", "021202", "021211"],
+            "0221": ["022101"],
+            "0232": ["023201"],
+            "0234": ["023401", "023407"],
+            "0235": ["023501", "023502", "023503", "023504", "023505", "023506", "023507", "023508"],
+            "0236": ["023601", "023602"],
+            "0237": ["023701", "023702", "023703", "023704", "023705"],
+            "0238": ["023801", "023802", "023803", "023804", "023805"],
+            "0239": ["023901", "023902", "023903"],
+            "0240": ["024001", "024002", "024003"],
+            "0241": ["024101", "024102", "024103", "024104"],
+            "0242": ["024201", "024202", "024204"]
+        };
+
+        const selectOrcamentaria = document.getElementById('und_orcamentaria');
+        const selectExecutora = document.getElementById('und_executora');
+
+        selectOrcamentaria.addEventListener('change', function() {
+            const orcamentariaSelecionada = this.value;
+            selectExecutora.innerHTML = '<option value="">Selecione a Unidade Executora...</option>';
+
+            // Reseta a área da Ação/LOA se a secretaria mudar
+            selectAcao.innerHTML = '<option value="">Aguardando Unidade Executora...</option>';
+            selectAcao.disabled = true;
+            inputPrograma.value = "";
+            inputUndMedida.value = "";
+
+            if (orcamentariaSelecionada && estruturaOrcamentaria[orcamentariaSelecionada]) {
+                selectExecutora.disabled = false;
+                const executoras = estruturaOrcamentaria[orcamentariaSelecionada];
+                executoras.forEach(function(codigo) {
+                    const option = document.createElement('option');
+                    option.value = codigo;
+                    option.textContent = codigo;
+                    selectExecutora.appendChild(option);
+                });
+            } else {
+                selectExecutora.disabled = true;
+                selectExecutora.innerHTML = '<option value="">Selecione primeiro a Unidade Orçamentária...</option>';
+            }
+        });
+
+
+        // --- MOTOR DE AUTO-PREENCHIMENTO DA LOA (COMUNICAÇÃO COM GOLANG) ---
+        const selectAcao = document.getElementById('acao');
+        const inputPrograma = document.getElementById('programa');
+        const inputUndMedida = document.getElementById('und_medida');
+        let acoesCarregadas = []; 
+
+        selectExecutora.addEventListener('change', function() {
+            const executora = this.value;
+            selectAcao.innerHTML = '<option value="">Carregando ações...</option>';
+            selectAcao.disabled = true;
+            inputPrograma.value = "";
+            inputUndMedida.value = "";
+
+            if (executora) {
+                // Chama a nova rota GET do Golang para buscar a LOA (URL ATUALIZADA PARA PRODUÇÃO)
+                fetch(`https://indicadoresaudesp.onrender.com/api/planejamento?executora=${executora}`)
+                .then(response => response.json())
+                .then(data => {
+                    acoesCarregadas = data || [];
+                    selectAcao.innerHTML = '<option value="">Selecione a Ação Planejada...</option>';
+                    
+                    if (acoesCarregadas.length > 0) {
+                        selectAcao.disabled = false;
+                        // Cria as opções de Ação dinamicamente com base no banco
+                        acoesCarregadas.forEach((item, index) => {
+                            const option = document.createElement('option');
+                            option.value = index; 
+                            option.textContent = item.acao;
+                            selectAcao.appendChild(option);
+                        });
+
+                        // --- PASSO 2: Verifica se há uma Ação na URL para auto-selecionar ---
+                        const parametros = new URLSearchParams(window.location.search);
+                        const urlAcaoTexto = parametros.get('acao');
+                        
+                        if (urlAcaoTexto) {
+                            // Procura na lista de opções qual contém o texto da URL (ex: "2008")
+                            for (let i = 0; i < selectAcao.options.length; i++) {
+                                if (selectAcao.options[i].text.includes(urlAcaoTexto)) {
+                                    selectAcao.selectedIndex = i;
+                                    selectAcao.dispatchEvent(new Event('change')); // Puxa Programa e Medida
+                                    break; // Para a busca ao encontrar
+                                }
+                            }
+                        }
+                        // --- FIM DO PASSO 2 ---
+
+                    } else {
+                        selectAcao.innerHTML = '<option value="">Nenhuma ação vinculada a esta unidade</option>';
+                    }
+                })
+                .catch(err => console.error('Erro ao buscar dados da LOA:', err));
+            }
+        });
+
+        // Quando o usuário escolher a Ação, auto-preenche o Programa e Und Medida
+        selectAcao.addEventListener('change', function() {
+            const index = this.value;
+            if (index !== "") {
+                const dados = acoesCarregadas[index];
+                inputPrograma.value = dados.programa;
+                inputUndMedida.value = dados.und_medida;
+            } else {
+                inputPrograma.value = "";
+                inputUndMedida.value = "";
+            }
+        });
+
+
+        // --- LÓGICA DE VALIDAÇÕES VISUAIS ---
+        const form = document.getElementById('monitoramentoForm');
+        const metaPrevista = document.getElementById('metaPrevista');
+        const metaRealizada = document.getElementById('metaRealizada');
+        const justificativa = document.getElementById('justificativa');
+        const labelJustificativa = document.getElementById('labelJustificativa');
+        const dataInicio = document.getElementById('dataInicio');
+        const dataFim = document.getElementById('dataFim');
+        const inputFotos = document.getElementById('fotos');
+
+        function verificarMetas() {
+            const prevista = parseFloat(metaPrevista.value);
+            const realizada = parseFloat(metaRealizada.value);
+
+            justificativa.classList.remove('input-error');
+            document.getElementById('errorJustificativa').style.display = 'none';
+
+            if (!isNaN(prevista) && !isNaN(realizada) && prevista !== realizada) {
+                justificativa.setAttribute('required', 'true');
+                labelJustificativa.innerHTML = 'Justificar a não execução ou o sub/superdimensionamento da ação: <span class="required-asterisk">*</span>';
+            } else {
+                justificativa.removeAttribute('required');
+                labelJustificativa.innerHTML = 'Justificar a não execução ou o sub/superdimensionamento da ação:';
+            }
+        }
+
+        metaPrevista.addEventListener('input', verificarMetas);
+        metaRealizada.addEventListener('input', verificarMetas);
+
+        inputFotos.addEventListener('change', function() {
+            const maxMB = 5;
+            const maxSize = maxMB * 1024 * 1024;
+            const errorFotos = document.getElementById('errorFotos');
+            let hasError = false;
+
+            for (let i = 0; i < this.files.length; i++) {
+                const file = this.files[i];
+                if (file.size > maxSize) {
+                    hasError = true;
+                    errorFotos.textContent = `A imagem "${file.name}" excede o limite de 5MB.`;
+                    break;
+                }
+            }
+
+            if (hasError) {
+                this.value = ''; 
+                this.classList.add('input-error');
+                errorFotos.style.display = 'block';
+            } else {
+                this.classList.remove('input-error');
+                errorFotos.style.display = 'none';
+            }
+        });
+
+        // --- ENVIO DOS DADOS PARA O GOLANG (FETCH API via FormData) ---
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            let isValid = true;
+
+            // Valida se a Ação foi selecionada
+            if (selectAcao.value === "") {
+                selectAcao.classList.add('input-error');
+                isValid = false;
+            } else {
+                selectAcao.classList.remove('input-error');
+            }
+
+            // Validação da Justificativa
+            if (justificativa.hasAttribute('required') && justificativa.value.trim() === "") {
+                justificativa.classList.add('input-error');
+                document.getElementById('errorJustificativa').style.display = 'block';
+                isValid = false;
+            }
+
+            // Validação das Datas
+            const valInicio = dataInicio.value; 
+            const valFim = dataFim.value;
+            
+            if (valInicio && valFim) {
+                const mesInicio = parseInt(valInicio.split('-')[1], 10); 
+                const mesFim = parseInt(valFim.split('-')[1], 10);
+                
+                if (mesInicio > 4 || mesFim > 4) { 
+                    dataInicio.classList.add('input-error');
+                    dataFim.classList.add('input-error');
+                    document.getElementById('errorData').style.display = 'block';
+                    isValid = false;
+                } else {
+                    dataInicio.classList.remove('input-error');
+                    dataFim.classList.remove('input-error');
+                    document.getElementById('errorData').style.display = 'none';
+                }
+            }
+
+            // Executa a requisição se tudo estiver válido
+            if (isValid) {
+                const formData = new FormData();
+                formData.append('und_executora', document.getElementById('und_executora').value);
+                
+                // Extrai o texto da ação selecionada e os valores bloqueados de programa e und_medida
+                const acaoTexto = selectAcao.options[selectAcao.selectedIndex].text;
+                formData.append('acao', acaoTexto);
+                formData.append('programa', document.getElementById('programa').value);
+                formData.append('und_medida', document.getElementById('und_medida').value);
+                
+                formData.append('ano_vigente', document.getElementById('anoVigente').textContent);
+                formData.append('quadrimestre', 1); // Fixo no layout atual
+                formData.append('meta_prevista', metaPrevista.value);
+                formData.append('meta_realizada', metaRealizada.value);
+                formData.append('local_execucao', document.getElementById('localExecucao').value);
+                formData.append('data_inicio', dataInicio.value);
+                formData.append('data_fim', dataFim.value);
+                formData.append('justificativa', justificativa.value || "");
+
+                const inputFotos = document.getElementById('fotos');
+                for (let i = 0; i < inputFotos.files.length; i++) {
+                    formData.append('fotos', inputFotos.files[i]);
+                }
+
+                const btnSubmit = document.querySelector('.btn-submit');
+                const textoOriginalBtn = btnSubmit.textContent;
+                btnSubmit.textContent = 'Gravando dados e enviando fotos...';
+                btnSubmit.disabled = true;
+
+                // Chamada POST para o backend (URL ATUALIZADA PARA PRODUÇÃO)
+                fetch('https://indicadoresaudesp.onrender.com/api/indicadores', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => { throw new Error(text) });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert("✅ " + data.mensagem);
+                    
+                    // Reseta todo o formulário para o estado inicial
+                    form.reset(); 
+                    document.getElementById('und_executora').innerHTML = '<option value="">Selecione primeiro a Unidade Orçamentária...</option>';
+                    document.getElementById('und_executora').disabled = true;
+                    selectAcao.innerHTML = '<option value="">Aguardando Unidade Executora...</option>';
+                    selectAcao.disabled = true;
+                    
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                })
+                .catch(error => {
+                    alert("❌ Erro na integração com o servidor: " + error.message);
+                })
+                .finally(() => {
+                    btnSubmit.textContent = textoOriginalBtn;
+                    btnSubmit.disabled = false;
+                });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+        
+        // --- PASSO 3: Chama a função de leitura da URL assim que a página terminar de montar ---
+        carregarDadosDaURL();
+    });
+</script>
+
+</body>
+</html>

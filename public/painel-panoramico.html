@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visão Panorâmica - Conformidade AUDESP</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --text-main: #2c3e50;
+            --card-bg: #ffffff;
+            --red-alert: #e74c3c;
+            --yellow-alert: #f39c12;
+            --green-alert: #27ae60;
+            --gray-light: #ecf0f1;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 30px; }
+        .header-panel { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: var(--card-bg); padding: 20px 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .header-panel h1 { margin: 0; color: #2c3e50; font-size: 1.8rem; }
+        .header-panel p { margin: 5px 0 0 0; color: #7f8c8d; }
+        
+        .filtros-topo select { padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 1rem; margin-left: 10px; }
+
+        .kpi-container { display: flex; gap: 20px; margin-bottom: 30px; }
+        .kpi-card { flex: 1; background: var(--card-bg); padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-bottom: 4px solid #bdc3c7; }
+        .kpi-card h2 { margin: 0; font-size: 2.5rem; color: #34495e; }
+        .kpi-card p { margin: 5px 0 0 0; font-size: 0.9rem; font-weight: bold; text-transform: uppercase; color: #7f8c8d;}
+
+        .grid-secretarias { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .card-secretaria { background: var(--card-bg); border-radius: 10px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; overflow: hidden; border-left: 6px solid #bdc3c7; transition: transform 0.2s; }
+        .card-secretaria:hover { transform: translateY(-5px); }
+        .farol-icon { position: absolute; top: 20px; right: 20px; width: 15px; height: 15px; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
+        .card-secretaria h3 { margin: 0 0 15px 0; font-size: 1.2rem; color: #2c3e50; padding-right: 25px; }
+        .stats-row { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 10px; color: #34495e; font-weight: 600; }
+        .progress-bg { background-color: var(--gray-light); height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 15px; }
+        .progress-fill { height: 100%; border-radius: 5px; transition: width 1s ease-in-out; }
+        
+        .btn-detalhes { width: 100%; padding: 10px; background-color: #ecf0f1; border: none; border-radius: 5px; font-weight: bold; color: #2c3e50; cursor: pointer; transition: background-color 0.2s; }
+        .btn-detalhes:hover { background-color: #bdc3c7; }
+
+        .status-red { border-left-color: var(--red-alert); }
+        .status-red .farol-icon { background-color: var(--red-alert); box-shadow: 0 0 15px var(--red-alert); }
+        .status-red .progress-fill { background-color: var(--red-alert); }
+        .status-yellow { border-left-color: var(--yellow-alert); }
+        .status-yellow .farol-icon { background-color: var(--yellow-alert); box-shadow: 0 0 15px var(--yellow-alert); }
+        .status-yellow .progress-fill { background-color: var(--yellow-alert); }
+        .status-green { border-left-color: var(--green-alert); }
+        .status-green .farol-icon { background-color: var(--green-alert); box-shadow: 0 0 15px var(--green-alert); }
+        .status-green .progress-fill { background-color: var(--green-alert); }
+
+        /* Estilos do Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: #fff; width: 90%; max-width: 900px; max-height: 85vh; border-radius: 10px; padding: 25px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; margin-bottom: 15px; }
+        .modal-header h2 { margin: 0; color: #2c3e50; }
+        .btn-fechar { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #7f8c8d; }
+        .btn-fechar:hover { color: var(--red-alert); }
+        .modal-body { overflow-y: auto; flex: 1; }
+        
+        .table-detalhes { width: 100%; border-collapse: collapse; }
+        .table-detalhes th, .table-detalhes td { padding: 12px; text-align: left; border-bottom: 1px solid #ecf0f1; font-size: 0.9rem; }
+        .table-detalhes th { background-color: #f8f9fa; position: sticky; top: 0; z-index: 10; color: #2c3e50; }
+        
+        .badge-status { padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .bg-pendente { background-color: #ffebee; color: var(--red-alert); border: 1px solid var(--red-alert); }
+        .bg-entregue { background-color: #e8f5e9; color: var(--green-alert); border: 1px solid var(--green-alert); }
+    </style>
+</head>
+<body>
+
+    <div class="header-panel">
+        <div>
+            <h1>Painel Panorâmico de Conformidade</h1>
+            <p>Rastreio de Inadimplência e Entregas AUDESP</p>
+        </div>
+        <div class="filtros-topo">
+            <select id="filtroAno">
+                <option value="2026">Ano 2026</option>
+                <option value="2027">Ano 2027</option>
+            </select>
+            <select id="filtroQuadrimestre">
+                <option value="1">1º Quadrimestre</option>
+                <option value="2">2º Quadrimestre</option>
+                <option value="3">3º Quadrimestre</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="kpi-container">
+        <div class="kpi-card" style="border-bottom-color: var(--green-alert);">
+            <h2 id="kpi-concluidas">0</h2>
+            <p>Secretarias Conformes (100%)</p>
+        </div>
+        <div class="kpi-card" style="border-bottom-color: var(--yellow-alert);">
+            <h2 id="kpi-parciais">0</h2>
+            <p>Entregas Parciais</p>
+        </div>
+        <div class="kpi-card" style="border-bottom-color: var(--red-alert);">
+            <h2 id="kpi-inadimplentes">0</h2>
+            <p>Inadimplentes (0%)</p>
+        </div>
+    </div>
+
+    <div class="grid-secretarias" id="grid-secretarias">
+        <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #7f8c8d;">Carregando status de compliance...</div>
+    </div>
+
+    <!-- JANELA MODAL DO DRILL-DOWN -->
+    <div class="modal-overlay" id="modalDrillDown">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitulo">Detalhes da Secretaria</h2>
+                <button class="btn-fechar" onclick="fecharModal()">✖</button>
+            </div>
+            <div class="modal-body">
+                <table class="table-detalhes">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Unidade Executora</th>
+                            <th>Ação Planejada (LOA)</th>
+                            <th>Progresso Físico</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalTabelaCorpo">
+                        <!-- Preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const secretariasNomes = {
+            "0201": "0201 - GABINETE DO PREFEITO",
+            "0202": "0202 - SECRETARIA DE HABITAÇÃO",
+            "0204": "0204 - SECRETARIA DE EDUCAÇÃO",
+            "0206": "0206 - SECRETARIA DE SAÚDE",
+            "0207": "0207 - SECRETARIA DE ESPORTES",
+            "0208": "0208 - SECRETARIA DE SEGURANÇA",
+            "0209": "0209 - ASSISTÊNCIA SOCIAL",
+            "0210": "0210 - FUNDO ASSIST. SOCIAL",
+            "0211": "0211 - SECRETARIA DE CULTURA",
+            "0212": "0212 - SEC. DE INFRAESTRUTURA",
+            "0221": "0221 - ENCARGOS GERAIS",
+            "0232": "0232 - PROCURADORIA JURÍDICA",
+            "0234": "0234 - SEC. DESENVOLVIMENTO ECONÔMICO",
+            "0235": "0235 - SECRETARIA DE ZELADORIA",
+            "0236": "0236 - SECRETARIA DE GOVERNO",
+            "0237": "0237 - SECRETARIA DE ADMINISTRAÇÃO",
+            "0238": "0238 - SECRETARIA DA FAZENDA",
+            "0239": "0239 - SECRETARIA DE COMUNICAÇÃO",
+            "0240": "0240 - SECRETARIA DE TURISMO",
+            "0241": "0241 - SECRETARIA DO MEIO AMBIENTE",
+            "0242": "0242 - SECRETARIA DE AGRICULTURA"
+        };
+
+        const filtroAno = document.getElementById('filtroAno');
+        const filtroQuad = document.getElementById('filtroQuadrimestre');
+
+        function carregarPainel() {
+            const ano = filtroAno.value;
+            const quad = filtroQuad.value;
+            const grid = document.getElementById('grid-secretarias');
+
+            // URL ATUALIZADA PARA PRODUÇÃO
+            fetch(`https://indicadoresaudesp.onrender.com/api/compliance?ano=${ano}&quadrimestre=${quad}`)
+                .then(r => r.json())
+                .then(dados => {
+                    let conformes = 0, parciais = 0, inadimplentes = 0;
+                    grid.innerHTML = ''; 
+
+                    if(!dados || dados.length === 0) {
+                        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center;">Nenhuma secretaria mapeada na LOA para esta seleção.</div>';
+                        return;
+                    }
+
+                    dados.forEach(sec => {
+                        let porcentagem = sec.acoes_exigidas > 0 ? (sec.acoes_entregues / sec.acoes_exigidas) * 100 : 0;
+                        let classeStatus = '';
+                        let textoStatus = '';
+
+                        if (porcentagem === 0) {
+                            classeStatus = 'status-red'; textoStatus = 'Inadimplente'; inadimplentes++;
+                        } else if (porcentagem > 0 && porcentagem < 100) {
+                            classeStatus = 'status-yellow'; textoStatus = 'Entrega Parcial'; parciais++;
+                        } else {
+                            classeStatus = 'status-green'; textoStatus = 'Conforme'; conformes++;
+                        }
+
+                        const nomeAmigavel = secretariasNomes[sec.cod_secretaria] || `Unidade ${sec.cod_secretaria}`;
+
+                        const card = document.createElement('div');
+                        card.className = `card-secretaria ${classeStatus}`;
+                        card.innerHTML = `
+                            <div class="farol-icon" title="${textoStatus}"></div>
+                            <h3>${nomeAmigavel}</h3>
+                            <div class="stats-row">
+                                <span>Ações Reportadas:</span>
+                                <span>${sec.acoes_entregues} de ${sec.acoes_exigidas}</span>
+                            </div>
+                            <div class="progress-bg">
+                                <div class="progress-fill" style="width: ${porcentagem}%"></div>
+                            </div>
+                            <div class="stats-row" style="font-size: 0.8rem; color: #7f8c8d;">
+                                <span>Índice de Conformidade:</span>
+                                <span>${porcentagem.toFixed(1)}%</span>
+                            </div>
+                            <button class="btn-detalhes">Rastrear Inadimplência</button>
+                        `;
+
+                        // Anexa o evento de clique de forma limpa via JavaScript (Evita Erro de Sintaxe)
+                        card.querySelector('.btn-detalhes').addEventListener('click', () => {
+                            abrirDrillDown(sec.cod_secretaria, nomeAmigavel);
+                        });
+
+                        grid.appendChild(card);
+                    });
+
+                    document.getElementById('kpi-concluidas').textContent = conformes;
+                    document.getElementById('kpi-parciais').textContent = parciais;
+                    document.getElementById('kpi-inadimplentes').textContent = inadimplentes;
+                })
+                .catch(err => {
+                    console.error("Erro na API de Compliance", err);
+                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--red-alert); font-weight: bold; background: white; border-radius: 8px;">❌ Erro ao conectar com o Servidor. Verifique a conexão.</div>';
+                });
+        }
+
+        // --- FUNÇÕES DO DRILL-DOWN ---
+        function abrirDrillDown(codSecretaria, nomeSecretaria) {
+            document.getElementById('modalTitulo').textContent = `Auditoria: ${nomeSecretaria}`;
+            const tbody = document.getElementById('modalTabelaCorpo');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Buscando relatório de ações...</td></tr>';
+            
+            document.getElementById('modalDrillDown').style.display = 'flex';
+
+            const ano = filtroAno.value;
+            const quad = filtroQuad.value;
+
+            // URL ATUALIZADA PARA PRODUÇÃO
+            fetch(`https://indicadoresaudesp.onrender.com/api/detalhes?secretaria=${codSecretaria}&ano=${ano}&quadrimestre=${quad}`)
+                .then(r => r.json())
+                .then(acoes => {
+                    tbody.innerHTML = '';
+                    
+                    if(!acoes || acoes.length === 0){
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhuma ação encontrada na LOA.</td></tr>';
+                        return;
+                    }
+
+                    acoes.forEach(acao => {
+                        const badgeHTML = acao.entregue 
+                            ? `<span class="badge-status bg-entregue">✔ ENTREGUE</span>` 
+                            : `<span class="badge-status bg-pendente">✖ PENDENTE</span>`;
+                        
+                        const progressoHTML = acao.entregue
+                            ? `<span style="color: var(--green-alert); font-weight: bold;">${acao.meta_realizada} / ${acao.meta_prevista}</span>`
+                            : `<span style="color: #bdc3c7;">Aguardando prestação...</span>`;
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${badgeHTML}</td>
+                            <td style="font-weight: bold;">${acao.cod_executora}</td>
+                            <td>${acao.acao}</td>
+                            <td>${progressoHTML}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(err => {
+                    tbody.innerHTML = `<tr><td colspan="4" style="color: red; text-align: center;">Erro ao conectar com o banco de dados.</td></tr>`;
+                });
+        }
+
+        function fecharModal() {
+            document.getElementById('modalDrillDown').style.display = 'none';
+        }
+
+        filtroAno.addEventListener('change', carregarPainel);
+        filtroQuad.addEventListener('change', carregarPainel);
+
+        carregarPainel();
+    </script>
+</body>
+</html>
