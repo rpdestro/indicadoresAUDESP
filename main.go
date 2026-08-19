@@ -1,9 +1,11 @@
+cat << 'EOF' > main.go
 package main
 
 import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"api-audesp/database"
 	"api-audesp/handlers"
@@ -12,13 +14,24 @@ import (
 )
 
 func main() {
+	// >>> DIAGNÓSTICO EDUCATIVO: Fazendo o Go nos contar o que ele enxerga <<<
+	arquivos, err := os.ReadDir("public")
+	if err != nil {
+		fmt.Println("⚠️ ALERTA: A pasta 'public' NÃO foi encontrada pelo Golang:", err)
+	} else {
+		fmt.Println("📁 Pasta 'public' ENCONTRADA! Arquivos vistos pelo servidor:")
+		for _, arq := range arquivos {
+			fmt.Println("  -", arq.Name())
+		}
+	}
+
 	// 1. Inicializa a conexão com o PostgreSQL no Supabase
 	database.Connect()
 
 	// 2. Cria o roteador padrão do Go
 	mux := http.NewServeMux()
 
-	// 3. Rotas da API (O Cérebro do sistema)
+	// 3. Rotas da API
 	mux.HandleFunc("/api/status", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -30,12 +43,11 @@ func main() {
 	mux.HandleFunc("/api/compliance", handlers.PainelConformidade)
 	mux.HandleFunc("/api/detalhes", handlers.DetalhesSecretaria)
 
-	// >>> NOVO: Servidor de Arquivos Estáticos (O Rosto do sistema) <<<
-	// Avisa ao Go para pegar os arquivos HTML da pasta "public" e entregar no navegador
-	fs := http.FileServer(http.Dir("./public"))
+	// 4. Servidor de Arquivos Estáticos (Refinado)
+	fs := http.FileServer(http.Dir("public"))
 	mux.Handle("/", fs)
 
-	// 4. Configuração de CORS (Permite a comunicação segura)
+	// 5. Configuração de CORS
 	handler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -43,12 +55,13 @@ func main() {
 		AllowCredentials: true,
 	}).Handler(mux)
 
-	// 5. Sobe o servidor na porta 8080
+	// 6. Sobe o servidor na porta 8080
 	porta := ":8080"
 	fmt.Printf("🚀 Servidor da API e Frontend escutando na porta %s\n", porta)
 	
-	err := http.ListenAndServe(porta, handler)
+	err = http.ListenAndServe(porta, handler)
 	if err != nil {
 		log.Fatal("❌ Erro ao iniciar o servidor: ", err)
 	}
 }
+EOF
