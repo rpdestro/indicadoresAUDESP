@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"api-audesp/database"
 	"api-audesp/handlers"
@@ -13,18 +12,7 @@ import (
 )
 
 func main() {
-	// >>> DIAGNÓSTICO: Verificando a pasta public <<<
-	arquivos, err := os.ReadDir("public")
-	if err != nil {
-		fmt.Println("⚠️ ALERTA: A pasta 'public' NÃO foi encontrada pelo Golang:", err)
-	} else {
-		fmt.Println("📁 Pasta 'public' ENCONTRADA! Arquivos vistos pelo servidor:")
-		for _, arq := range arquivos {
-			fmt.Println("  -", arq.Name())
-		}
-	}
-
-	// 1. Inicializa a conexão com o banco
+	// 1. Inicializa a conexão com o PostgreSQL
 	database.Connect()
 
 	// 2. Cria o roteador padrão do Go
@@ -42,11 +30,12 @@ func main() {
 	mux.HandleFunc("/api/compliance", handlers.PainelConformidade)
 	mux.HandleFunc("/api/detalhes", handlers.DetalhesSecretaria)
 
-	// 4. Servidor de Arquivos Estáticos (Entrega o HTML)
-	fs := http.FileServer(http.Dir("public"))
+	// >>> SERVIDOR DE ARQUIVOS HTML <<<
+	// Isso resolve o erro 404!
+	fs := http.FileServer(http.Dir("./public"))
 	mux.Handle("/", fs)
 
-	// 5. Configuração de CORS
+	// 4. Configuração de CORS
 	handler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -54,11 +43,11 @@ func main() {
 		AllowCredentials: true,
 	}).Handler(mux)
 
-	// 6. Sobe o servidor
+	// 5. Sobe o servidor
 	porta := ":8080"
 	fmt.Printf("🚀 Servidor da API e Frontend escutando na porta %s\n", porta)
 	
-	err = http.ListenAndServe(porta, handler)
+	err := http.ListenAndServe(porta, handler)
 	if err != nil {
 		log.Fatal("❌ Erro ao iniciar o servidor: ", err)
 	}
