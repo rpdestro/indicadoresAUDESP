@@ -1,7 +1,9 @@
 package main
 
 import (
+	"embed"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 
@@ -10,6 +12,9 @@ import (
 
 	"github.com/rs/cors"
 )
+
+//go:embed public
+var publicFiles embed.FS
 
 func main() {
 	// 1. Inicializa a conexão com o PostgreSQL
@@ -30,10 +35,15 @@ func main() {
 	mux.HandleFunc("/api/compliance", handlers.PainelConformidade)
 	mux.HandleFunc("/api/detalhes", handlers.DetalhesSecretaria)
 
-	// >>> SERVIDOR DE ARQUIVOS HTML <<<
-	// Isso resolve o erro 404!
-	fs := http.FileServer(http.Dir("./public"))
-	mux.Handle("/", fs)
+	// >>> CÓDIGO CORRIGIDO: SERVIDOR DE ARQUIVOS EMBUTIDO <<<
+	// Extrai a subpasta "public" do sistema de arquivos embutido no executável
+	publicFS, err := fs.Sub(publicFiles, "public")
+	if err != nil {
+		log.Fatal("❌ Erro ao embutir pasta public: ", err)
+	}
+
+	// Serve os arquivos HTML diretamente da memória (Resolve o 404 definitivamente)
+	mux.Handle("/", http.FileServer(http.FS(publicFS)))
 
 	// 4. Configuração de CORS
 	handler := cors.New(cors.Options{
@@ -47,8 +57,7 @@ func main() {
 	porta := ":8080"
 	fmt.Printf("🚀 Servidor da API e Frontend escutando na porta %s\n", porta)
 	
-	err := http.ListenAndServe(porta, handler)
-	if err != nil {
+	if err := http.ListenAndServe(porta, handler); err != nil {
 		log.Fatal("❌ Erro ao iniciar o servidor: ", err)
 	}
 }
