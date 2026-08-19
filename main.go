@@ -1,4 +1,3 @@
-cat << 'EOF' > main.go
 package main
 
 import (
@@ -14,7 +13,7 @@ import (
 )
 
 func main() {
-	// >>> DIAGNÓSTICO EDUCATIVO: Fazendo o Go nos contar o que ele enxerga <<<
+	// >>> DIAGNÓSTICO: Verificando a pasta public <<<
 	arquivos, err := os.ReadDir("public")
 	if err != nil {
 		fmt.Println("⚠️ ALERTA: A pasta 'public' NÃO foi encontrada pelo Golang:", err)
@@ -25,7 +24,7 @@ func main() {
 		}
 	}
 
-	// 1. Inicializa a conexão com o PostgreSQL no Supabase
+	// 1. Inicializa a conexão com o banco
 	database.Connect()
 
 	// 2. Cria o roteador padrão do Go
@@ -43,7 +42,7 @@ func main() {
 	mux.HandleFunc("/api/compliance", handlers.PainelConformidade)
 	mux.HandleFunc("/api/detalhes", handlers.DetalhesSecretaria)
 
-	// 4. Servidor de Arquivos Estáticos (Refinado)
+	// 4. Servidor de Arquivos Estáticos (Entrega o HTML)
 	fs := http.FileServer(http.Dir("public"))
 	mux.Handle("/", fs)
 
@@ -55,7 +54,7 @@ func main() {
 		AllowCredentials: true,
 	}).Handler(mux)
 
-	// 6. Sobe o servidor na porta 8080
+	// 6. Sobe o servidor
 	porta := ":8080"
 	fmt.Printf("🚀 Servidor da API e Frontend escutando na porta %s\n", porta)
 	
@@ -64,4 +63,3 @@ func main() {
 		log.Fatal("❌ Erro ao iniciar o servidor: ", err)
 	}
 }
-EOF
